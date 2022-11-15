@@ -10,6 +10,9 @@ const App = () => {
       let sdk;
       try {
         sdk = await showcaseWindow.MP_SDK.connect(showcaseWindow);
+        console.log(sdk);
+        const [model] = await sdk.Scene.query(['model']);
+        console.log(model);
       }
       catch(e) {
         console.error(e);
