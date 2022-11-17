@@ -1,7 +1,6 @@
 import "./App.css";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import { ContentFrame } from "./components/ContentFrame/ContentFrame";
-import { cloneJSON } from "three/addons/libs/ecsy.module";
 
 const App = () => {
   const ref = useRef(null);
@@ -11,11 +10,9 @@ const App = () => {
     const sdk = ref.current;
     const showcaseWindow = sdk.contentWindow;
 
-    let scene2;
+    let cssScene;
     let renderer2;
     let camera;
-    let mesh;
-    let domObject;
 
     sdk.addEventListener("load", async function () {
       let sdk;
@@ -23,47 +20,13 @@ const App = () => {
         sdk = await showcaseWindow.MP_SDK.connect(showcaseWindow);
         const [model] = await sdk.Scene.query(["model"]);
         const scene = model.parent;
-
+        camera = scene.getObjectByName("CameraRig").camera;
         await sdk.Scene.configure(function (renderer, three) {
-          scene2 = new three.Scene();
-          // Iframe
-          let element = document.createElement("iframe");
-          element.style.width = "300px";
-          element.style.height = "200px";
-          element.style.opacity = 0.999;
-          element.src =
-            "https://kenneth.io/post/detecting-multi-touch-trackpad-gestures-in-javascript";
-
-          domObject = new three.CSS3DObject(element);
-          domObject.scale.set(0.005, 0.005, 0.005);
-          domObject.position.set(5.445350646972656, 1.3341099739074707, 21);
-          domObject.rotation.set(0, Math.PI * 0.96, 0);
-          scene2.add(domObject);
-
-          console.log(domObject);
-
-          console.log(scene.children[0].children[0]);
-          camera = scene.children[0].children[0];
-
-          //Plane
-          var material = new three.MeshBasicMaterial({
-            opacity: 0.2,
-            color: new three.Color("red"),
-            blending: three.NoBlending,
-            side: three.DoubleSide,
-          });
-          var geometry = new three.PlaneGeometry(1, 1);
-          mesh = new three.Mesh(geometry, material);
-          mesh.scale.set(0.5, 0.5, 0.5);
-          mesh.name = "box";
-          mesh.position.set(5.445350646972656, 1.6341099739074707, 21);
-
-          //  renderer
-          renderer2 = new three.CSS3DRenderer();
-          renderer2.setSize(window.innerWidth, window.innerHeight);
-          renderer2.domElement.style.position = "absolute";
-          renderer2.domElement.style.top = 0;
-          cssRef.current.appendChild(renderer2.domElement);
+          cssScene = new three.Scene();
+          const element = initDomElement();
+          const domObject = initDomObject(three, element);
+          renderer2 = initCSS3DRenderer(three);
+          cssScene.add(domObject);
         });
       } catch (e) {
         console.error(e);
@@ -71,16 +34,44 @@ const App = () => {
       }
     });
 
-    function animate() {
-      if (camera && scene2) {
-        renderer2.render(scene2, camera);
+    const animate = () => {
+      if (camera && cssScene) {
+        renderer2.render(cssScene, camera);
       }
       requestAnimationFrame(animate);
-    }
+    };
     animate();
 
     //TODO: add some more actions using sdk. E.g. sdk.Scene()...
   }, []);
+
+  const initDomElement = () => {
+    const element = document.createElement("iframe");
+    element.style.width = "600px";
+    element.style.height = "380px";
+    element.style.opacity = 0.999;
+    element.src =
+      "https://admin.treedis.com/login?_ga=2.105331530.893087370.1668653164-1072976840.1668653164&_gl=1*umzo4r*_ga*MTA3Mjk3Njg0MC4xNjY4NjUzMTY0*_ga_YLK9Q8X6JM*MTY2ODcwMzQ2OS4zLjAuMTY2ODcwMzQ2OS4wLjAuMA..";
+    return element;
+  };
+
+  const initDomObject = (three, element) => {
+    const domObject = new three.CSS3DObject(element);
+    domObject.scale.set(0.003, 0.003, 0.003);
+    domObject.position.set(5.445350646972656, 1.3341099739074707, 21);
+    domObject.rotation.set(0, Math.PI * 0.96, 0);
+    return domObject;
+  };
+
+  const initCSS3DRenderer = (three) => {
+    const renderer2 = new three.CSS3DRenderer();
+    renderer2.setSize(window.innerWidth, window.innerHeight);
+    renderer2.domElement.style.position = "absolute";
+    renderer2.domElement.style.top = 0;
+    cssRef.current.appendChild(renderer2.domElement);
+    return renderer2;
+  };
+
   return (
     <div className="App">
       <iframe
@@ -90,7 +81,7 @@ const App = () => {
         allowFullScreen
         allow="vr"
       ></iframe>
-      <div id="css" style={{ pointerEvents: "none" }} ref={cssRef}></div>
+      <ContentFrame refProp={cssRef} />
     </div>
   );
 };
