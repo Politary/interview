@@ -14,9 +14,7 @@ export const ContentFrame = ({ loaded, three, scene, src }) => {
       cssScene.add(domObject);
 
       const animate = () => {
-        if (camera && cssScene) {
-          renderer2.render(cssScene, camera);
-        }
+        renderer2.render(cssScene, camera);
         requestAnimationFrame(animate);
       };
       animate();
